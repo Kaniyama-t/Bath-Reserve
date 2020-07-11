@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            #error{
+                color: red;
+            }
+        </style>
+        <title>浴室予約システム</title>
+    </head>
+    <body>
+        <div>
+            <h1>浴室予約システム</h1>
+            <h2>ログイン</h2>
+        </div>
+        <div>
+            {% if Error == 1: %}
+            <p id=error>学籍番号とパスワードを入力してください．</p>
+            {% elif Error == 2:%}
+            <p id=error>ログイン時にエラーが発生しました．</p>
+            {% endif %}
+            <form action="/reserve" method="POST">
+                <input type="text" name="userid" placeholder="学籍番号"/><br>
+                <input type="password" name="password" placeholder="パスワード"/><br>
+                <input type="submit" value="ログイン"/>
+            </form>
+        </div>
+        <div>
+            ユーザ登録はこちら → <a href="/user_register">新規登録</a>
+        </div>
+    </body>
+</html>

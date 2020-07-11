@@ -1,0 +1,8 @@
+venv/*
+my_server_settings.py
+.vscode/*
+__pycache__/
+
+.deployment
+
+my_server_setting.py

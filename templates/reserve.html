@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>浴室予約システム</title>
+    </head>
+    <body>
+        <h1>浴室予約システム</h1>
+        <p>ようこそ，{{userid}}さん．<br>{{today}}の浴室の予約を行います．</p>
+        <form action="/reserve_resister" method="POST">
+            <table border="1">
+                <tr>
+                    <th colspan="2">入浴時間</th>
+                    {% for i in range(times_len-1) %}
+                    <th> {{times[i]}} ~ {{times[i+1]}} </th>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <th rowspan="2">予約状況</th>
+                    <th>大風呂</th>
+                    {% for i in range(times_len-1) %}
+                        {% if reservation_large[i] == None %}
+                            <th> 0/9 </th>
+                        {% else %}
+                            <th> {{reservation_large[i]}}/9 </th>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <th>小風呂</th>
+                    {% for i in range(times_len-1) %}
+                        {% if reservation_small[i] == None %}
+                            <th> 0/4 </th>
+                        {% else %}
+                            <th> {{reservation_small[i]}}/4 </th>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <th rowspan="2">予約</th>
+                    <th>大風呂</th>
+                    {% for i in range(times_len-1) %}
+                    <th> <input type="radio" name="desired_time" value="{{i+100}}"> </th>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <th>小風呂</th>
+                    {% for i in range(times_len-1) %}
+                    <th> <input type="radio" name="desired_time" value="{{i}}"> </th>
+                    {% endfor %}
+                </tr>
+            </table>
+            <input type="submit" value="予約">
+        </form>
+    </body>
+</html>
