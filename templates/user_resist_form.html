@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    ,<head>
+        <style>
+            #error{
+                color: red;
+            }
+        </style>
+        <title>浴室予約システム</title>
+    </head>
+    <body>
+        <div>
+            <h1>浴室予約システム</h1>
+            <h2>ユーザ新規登録</h2>
+        </div>
+        <div>
+            % if Error == 1: %}
+            <p id=error>学籍番号が有効ではありません．</p>
+            {% endif %}
+            <p>
+                ユーザの新規登録を行います．<br>
+                学籍番号とパスワードを入力してください．<br>
+                ただし，セキュリティが万全である保証ができないので，他サービス等で使用しているパスワードの流用は避けてください．
+            </p>
+            <form action="/user_resister" method="POST">
+                <input type="text" name="userid" placeholder="学籍番号"/><br>
+                <input type="password" name="password" placeholder="パスワード"/><br>
+                <input type="submit" value="登録"/>
+            </form>
+        </div>        
+    </body>
+</html>
