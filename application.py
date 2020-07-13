@@ -2,9 +2,11 @@ from flask import *
 import datetime
 import hashlib
 import pyodbc
+import random
 import json
 from my_server_setting import server, database, username, password, driver 
 app = Flask(__name__)
+app.secret_key = str(random.randrange(9999999999999999))
 
 # 入浴時間リスト
 times = []
@@ -61,84 +63,104 @@ def login_manager():
     sql = "SELECT bath_type, date FROM reserve WHERE userid='" + userid +"' AND date LIKE '" + today + "%'"
     cursor.execute(sql)
     result = cursor.fetchone()
-    if result[0] == "":
-        pass
+    if result == None:
+        bath_type = ""
+        bath_time = ""
+        reserved = False
     else:
-        
+        bath_type = result[0]
+        bath_time = str(result[1])[11:]
+        reserved = True
     # DB切断
     cursor.close()
     cnxn.close()
     # 返却処理
-    dic = {'userid':userid, 'login_flag':True}
-    responce = make_response(render_template("reserve.html",today=now.strftime("%m/%d") ,userid=userid, times=times, times_len=len(times), reservation_small=reservation_small, reservation_large=reservation_large))
-    responce.set_cookie('cookie', value = json.dumps(dic))
+    session['userid'] = userid
+    session['login_flag'] = True
+    session['reserved'] = reserved
+    # dic = {'userid':userid, 'login_flag':True, 'reserved':reserved}
+    responce = make_response(render_template("reserve.html",today=now.strftime("%m/%d") ,userid=userid, times=times, times_len=len(times), reservation_small=reservation_small, reservation_large=reservation_large, bath_type=bath_type, bath_time=bath_time))
+    # responce.set_cookie('cookie', value = json.dumps(dic))
     return responce
 
 @app.route("/reserve_resister", methods=["GET", "POST"])
 def reserve_register():
     # ユーザ変数取得
-    cookie = request.cookies.get('cookie', None)
-    dic = json.loads(cookie)
-    print(request)
+    userid = session['userid']
     desired_time = request.form["desired_time"]
     now = datetime.datetime.now()
+    today = now.strftime("%Y_%m_%d ")
     bath_type = int(desired_time)/100
     desired_time = now.strftime("%Y_%m_%d ") + times[int(desired_time)%100]
     # DB接続
     cnxn = pyodbc.connect('DRIVER='+driver+';SERVER='+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+password)
+    cursor = cnxn.cursor()
     # パスワード認証
-    i = 0
-    while i<10:
-        userpassword = hashlib.sha256(userpassword.encode()).hexdigest()
-        i += cursor = cnxn.cursor()
-    # DBに予約登録
-    sql = "INSERT INTO reserve VALUES('" + dic["userid"] + "', " + str(bath_type) + ", '" + desired_time + "')"
-    cursor.execute(sql)
-    cnxn.commit()
+    # i = 0
+    # while i<10:
+    #     userpassword = hashlib.sha256(userpassword.encode()).hexdigest()
+    #     i += 1
+    # セッション認証
+    if session['login_flag']:
+        if session['reserved']:
+            # DBの予約を更新
+            sql = "UPDATE reserve SET bath_type=" + str(bath_type) + ", date='" + desired_time + "' WHERE userid='" + session['userid'] +"' AND date LIKE '" + today + "%'"
+            cursor.execute(sql)
+            cnxn.commit()
+        else:
+            # DBに予約登録
+            sql = "INSERT INTO reserve VALUES('" + session["userid"] + "', " + str(bath_type) + ", '" + desired_time + "')"
+            cursor.execute(sql)
+            cnxn.commit()
+    else:
+        render_template("index.html", Error=3)
     # DB切断
     cursor.close()
     cnxn.close()
     #返却処理
-    return render_template("reserve_success.html", desired_time=desired_time, userid=dic["userid"])
+    session.pop('userid', None)
+    session.pop('login_flag', None)
+    session.pop('reserved', None)
+    return render_template("reserve_success.html", desired_time=desired_time, userid=userid)
     
-@app.route("/user_resist_form", methods=["GET", "POST"])
+@app.route("/user_regist_form", methods=["GET", "POST"])
 def user_regist_form():
     return render_template("user_regist_form.html")
 
-@app.route("/user_resister", methods=["GET","POST"])
+@app.route("/user_register", methods=["GET","POST"])
 def user_resister():
     # ユーザ変数取得
     userid = request.form["userid"]
-    userpassword = request.form["userpassword"]
+    userpassword = request.form["password"]
     # DB接続
     cnxn = pyodbc.connect('DRIVER='+driver+';SERVER='+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+password)
     cursor = cnxn.cursor()
     # DBに学籍番号の存在を問い合わせ
-    sql = "SELECT username FROM users WHERE userid='" + userid + "'"
+    sql = "SELECT userid FROM users WHERE userid='" + userid + "'"
     cursor.execute(sql)
     result = cursor.fetchone()
-    if(result[0] == ""):
-        return render_template("user_resist_form.html", Error=1)
+    if(result == None):
+        return render_template("user_regist_form.html", Error=1)
     # DBにパスワードがすでに登録されているかを確認
     sql = "SELECT userpassword FROM users WHERE userid='" + userid + "'"
     cursor.execute(sql)
     result = cursor.fetchone()
     if(result[0] != ""):
-        return render_template("user_resist_form.html", Error=2)
+        return render_template("user_regist_form.html", Error=2)
     # パスワードストレッチング
     i = 0
     while i<10:
         userpassword = hashlib.sha256(userpassword.encode()).hexdigest()
         i += 1
     # DBにパスワードを登録
-    sql = "UPDATE users SET userpassword='" + userpassword + "' WHERE userid='" + userid + "')"
+    sql = "UPDATE users SET userpassword='" + userpassword + "' WHERE userid='" + userid + "'"
     cursor.execute(sql)
     cnxn.commit()
     # DB切断
     cursor.close()
     cnxn.close()
     # 返却処理
-    return render_template("user_resist_success.html")
+    return render_template("user_regist_success.html")
 
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=5000, threaded=True)
+    app.run(debug=True, host="0.0.0.0", port=5000, threaded=True)

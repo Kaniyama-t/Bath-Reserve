@@ -14,14 +14,16 @@
             <h2>ログイン</h2>
         </div>
         <div>
-            {% if Error == 1: %}
+            {% if Error == 1 %}
             <p id=error>学籍番号とパスワードを入力してください．</p>
-            {% elif Error == 2:%}
+            {% elif Error == 2 %}
             <p id=error>ログイン時にエラーが発生しました．</p>
+            {% elif Error == 3 %}
+            <p id=error>不正な操作が確認されました．最初からやり直してください．</p>
             {% endif %}
             <form action="/reserve" method="POST">
-                <input type="text" name="userid" placeholder="学籍番号"/><br>
-                <input type="password" name="password" placeholder="パスワード"/><br>
+                <input type="text" name="userid" placeholder="学籍番号" required/><br>
+                <input type="password" name="password" placeholder="パスワード" required/><br>
                 <input type="submit" value="ログイン"/>
             </form>
         </div>
