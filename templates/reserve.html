@@ -39,13 +39,21 @@
                     <th rowspan="2">予約</th>
                     <th>大風呂</th>
                     {% for i in range(times_len-1) %}
-                    <th> <input type="radio" name="desired_time" value="{{i+100}}"> </th>
+                        {% if bath_type == 1 and bath_time == times[i] %}
+                            <th> <input type="radio" name="desired_time" value="{{i+100}}" checked="checked"> <br> 予約済 </th>
+                        {% else %}
+                            <th> <input type="radio" name="desired_time" value="{{i+100}}"> </th>
+                        {% endif %}
                     {% endfor %}
                 </tr>
                 <tr>
                     <th>小風呂</th>
                     {% for i in range(times_len-1) %}
-                    <th> <input type="radio" name="desired_time" value="{{i}}"> </th>
+                        {% if bath_type == 0 and bath_time == times[i] %}
+                            <th> <input type="radio" name="desired_time" value="{{i}}" checked="checked"> <br> 予約済 </th>
+                        {% else %}
+                            <th> <input type="radio" name="desired_time" value="{{i}}"> </th>
+                        {% endif %}
                     {% endfor %}
                 </tr>
             </table>
