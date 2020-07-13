@@ -6,3 +6,5 @@ __pycache__/
 .deployment
 
 my_server_setting.py
+
+dormitory.csv
