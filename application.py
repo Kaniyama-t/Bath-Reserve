@@ -32,7 +32,8 @@ def login_manager():
     cnxn = pyodbc.connect('DRIVER='+driver+';SERVER='+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+password)
     cursor = cnxn.cursor()
     # DBからパスワード取得
-    cursor.execute("SELECT userpassword FROM users WHERE userid='" + userid + "'")
+    sql = "SELECT userpassword FROM users WHERE userid = ?"
+    cursor.execute(sql, userid)
     result = cursor.fetchone()
     # パスワード認証
     i = 0
@@ -60,8 +61,8 @@ def login_manager():
     print(reservation_small)
     print(reservation_large)
     # 既存の自身の予約を確認
-    sql = "SELECT bath_type, date FROM reserve WHERE userid='" + userid +"' AND date LIKE '" + today + "%'"
-    cursor.execute(sql)
+    sql = "SELECT bath_type, date FROM reserve WHERE userid=? AND date LIKE ?"
+    cursor.execute(sql, userid, today+"%")
     result = cursor.fetchone()
     if result == None:
         bath_type = ""
@@ -90,7 +91,7 @@ def reserve_register():
     desired_time = request.form["desired_time"]
     now = datetime.datetime.now()
     today = now.strftime("%Y_%m_%d ")
-    bath_type = int(desired_time)/100
+    bath_type = int(desired_time)//100
     desired_time = now.strftime("%Y_%m_%d ") + times[int(desired_time)%100]
     # DB接続
     cnxn = pyodbc.connect('DRIVER='+driver+';SERVER='+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+password)
@@ -104,13 +105,13 @@ def reserve_register():
     if session['login_flag']:
         if session['reserved']:
             # DBの予約を更新
-            sql = "UPDATE reserve SET bath_type=" + str(bath_type) + ", date='" + desired_time + "' WHERE userid='" + session['userid'] +"' AND date LIKE '" + today + "%'"
-            cursor.execute(sql)
+            sql = "UPDATE reserve SET bath_type=?, date=? WHERE userid=? AND date LIKE ?"
+            cursor.execute(sql, str(bath_type), desired_time, session['userid'], today+"%")
             cnxn.commit()
         else:
             # DBに予約登録
-            sql = "INSERT INTO reserve VALUES('" + session["userid"] + "', " + str(bath_type) + ", '" + desired_time + "')"
-            cursor.execute(sql)
+            sql = "INSERT INTO reserve VALUES(?, ?, ?)"
+            cursor.execute(sql, session["userid"], str(bath_type), desired_time)
             cnxn.commit()
     else:
         render_template("index.html", Error=3)
@@ -136,14 +137,14 @@ def user_resister():
     cnxn = pyodbc.connect('DRIVER='+driver+';SERVER='+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+password)
     cursor = cnxn.cursor()
     # DBに学籍番号の存在を問い合わせ
-    sql = "SELECT userid FROM users WHERE userid='" + userid + "'"
-    cursor.execute(sql)
+    sql = "SELECT userid FROM users WHERE userid=?"
+    cursor.execute(sql, userid)
     result = cursor.fetchone()
     if(result == None):
         return render_template("user_regist_form.html", Error=1)
     # DBにパスワードがすでに登録されているかを確認
-    sql = "SELECT userpassword FROM users WHERE userid='" + userid + "'"
-    cursor.execute(sql)
+    sql = "SELECT userpassword FROM users WHERE userid=?"
+    cursor.execute(sql, userid)
     result = cursor.fetchone()
     if(result[0] != ""):
         return render_template("user_regist_form.html", Error=2)
@@ -153,8 +154,8 @@ def user_resister():
         userpassword = hashlib.sha256(userpassword.encode()).hexdigest()
         i += 1
     # DBにパスワードを登録
-    sql = "UPDATE users SET userpassword='" + userpassword + "' WHERE userid='" + userid + "'"
-    cursor.execute(sql)
+    sql = "UPDATE users SET userpassword=? WHERE userid=?"
+    cursor.execute(sql, userpassword, userid)
     cnxn.commit()
     # DB切断
     cursor.close()
@@ -163,4 +164,4 @@ def user_resister():
     return render_template("user_regist_success.html")
 
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=5000, threaded=True)
+    app.run(debug=True, host="0.0.0.0", port=5000, threaded=True)
