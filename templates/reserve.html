@@ -1,11 +1,19 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <style>
+            #error{
+                color: red;
+            }
+        </style>
         <title>浴室予約システム</title>
     </head>
     <body>
         <h1>浴室予約システム</h1>
         <p>ようこそ，{{userid}}さん．<br>{{today}}の浴室の予約を行います．</p>
+        {% if Error == 1 %}
+        <p id="error">ご希望の時間に予約することができませんでした．<br> 他の時間を選択してください．</p>
+        {% endif %}
         <form action="/reserve_resister" method="POST">
             <table border="1">
                 <tr>
@@ -42,7 +50,11 @@
                         {% if bath_type == 1 and bath_time == times[i] %}
                             <th> <input type="radio" name="desired_time" value="{{i+100}}" checked="checked"> <br> 予約済 </th>
                         {% else %}
+                            {% if reservation_large[i] >= 9 %}
+                            <th> <input type="radio" name="desired_time" value="{{i+100}}" disabled> </th>
+                            {% else %}
                             <th> <input type="radio" name="desired_time" value="{{i+100}}"> </th>
+                            {% endif %}
                         {% endif %}
                     {% endfor %}
                 </tr>
@@ -52,7 +64,11 @@
                         {% if bath_type == 0 and bath_time == times[i] %}
                             <th> <input type="radio" name="desired_time" value="{{i}}" checked="checked"> <br> 予約済 </th>
                         {% else %}
+                            {% if reservation_small[i] >= 4 %}
+                            <th> <input type="radio" name="desired_time" value="{{i}}" disabled> </th>
+                            {% else %}
                             <th> <input type="radio" name="desired_time" value="{{i}}"> </th>
+                            {% endif %}
                         {% endif %}
                     {% endfor %}
                 </tr>
