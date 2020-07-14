@@ -5,6 +5,9 @@ import pyodbc
 import random
 import json
 from my_server_setting import server, database, username, password, driver 
+
+import numpy as np
+
 app = Flask(__name__)
 app.secret_key = str(random.randrange(9999999999999999))
 
@@ -28,9 +31,13 @@ def login_manager():
     print(request)
     userid = request.form["userid"]
     userpassword = request.form["password"]
+    # ----------------------------------------------------------
     # DB接続
+    # 
+    # ----------------------------------------------------------1433
     cnxn = pyodbc.connect('DRIVER='+driver+';SERVER='+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+password)
     cursor = cnxn.cursor()
+
     # DBからパスワード取得
     sql = "SELECT userpassword FROM users WHERE userid = ?"
     cursor.execute(sql, userid)
@@ -44,45 +51,82 @@ def login_manager():
         return render_template("index.html", Error=1)
     elif result[0] != userpassword:
         return render_template("index.html", Error=2)
-    # DBから予約状況取得
+    
+    # initialize variable
     now = datetime.datetime.now()
-    today = now.strftime("%Y_%m_%d ")
-    sql = "SELECT "
-    i = 0
-    while i < len(times)-1:
-        sql = sql + "SUM(CASE WHEN date = '" + today + times[i] + "' THEN 1 ELSE 0 END), "
-        i += 1
-    sql_small = sql[:-2] +" FROM reserve WHERE bath_type = 0"
-    sql_large = sql[:-2] +" FROM reserve WHERE bath_type = 1"
-    cursor.execute(sql_small)
-    reservation_small = cursor.fetchone()
-    cursor.execute(sql_large)
-    reservation_large = cursor.fetchone()
+    today = now.strftime("%Y_%m_%d")
+
+    # ----------------------------------------------------------
+    # 現時点の予約時間帯あたりの予約者数を取得
+    # Get Today's number of RESERVATION.
+    # ----------------------------------------------------------
+    #
+    #    |---------------------|-------------|
+    #    |       date          | reserve_cnt |
+    #    |---------------------|-------------|
+    # Ex.| 2020-07-14 17:30:00 |      3      | 
+    #    |---------------------|-------------|
+    # Ex.| 2020-07-14 17:55:00 |      1      | 
+    #    |---------------------|-------------|
+    #    ～～～～～～～～～～～～～～～～～～～
+    #
+    # Note: only "today" argment for sql command must not escape. Koreha Siyou Desu.
+    get_today_cnt = "SELECT date, count(userid) As reserve_cnt FROM reserve " \
+                  + "WHERE bath_type = ? " \
+                  + "group by date HAVING date LIKE '"+today+"%'" \
+                  + "order by date asc;"
+    print(get_today_cnt)
+    
+    # SMALL
+    reservation_small = cursor.execute(get_today_cnt, 0).fetchall()# [('2020_07_141990-01-01 20:20:00',4), ...]
+    reservation_small = np.array(reservation_small).T.tolist()# [['2020_07_141990-01-01 20:20:00', ... ], ['4', ... ]]
     print(reservation_small)
+
+    # LARGE
+    reservation_large = cursor.execute(get_today_cnt, 1).fetchall() # [('2020_07_141990-01-01 20:20:00',4), ...]
+    reservation_large = np.array(reservation_large).T.tolist()# [['2020_07_141990-01-01 20:20:00', ... ], ['4', ... ]]
     print(reservation_large)
-    # 既存の自身の予約を確認
-    sql = "SELECT bath_type, date FROM reserve WHERE userid=? AND date LIKE ?"
-    cursor.execute(sql, userid, today+"%")
-    result = cursor.fetchone()
-    if result == None:
-        bath_type = ""
-        bath_time = ""
-        reserved = False
-    else:
-        bath_type = result[0]
-        bath_time = str(result[1])[11:]
-        reserved = True
+
+    # ----------------------------------------------------------
+    # 新規予約か、予約更新かをチェック
+    # 
+    # ----------------------------------------------------------
+    sql = "SELECT bath_type, date FROM reserve WHERE userid=? AND date LIKE ?;"
+    cursor.execute(sql, userid, today+'%')
+
+    result = cursor.fetchone() or ["",""]
+    reserved = (result == None)
+    bath_type = result[0]
+    bath_time = str(result[1])[11:]
+    
+    # ----------------------------------------------------------
     # DB切断
+    # 
+    # ----------------------------------------------------------
     cursor.close()
     cnxn.close()
-    # 返却処理
+
+    # ----------------------------------------------------------
+    # Generate Responce
+    # 
+    # ----------------------------------------------------------
     session['userid'] = userid
     session['login_flag'] = True
     session['reserved'] = reserved
     # dic = {'userid':userid, 'login_flag':True, 'reserved':reserved}
-    responce = make_response(render_template("reserve.html",today=now.strftime("%m/%d") ,userid=userid, times=times, times_len=len(times), reservation_small=reservation_small, reservation_large=reservation_large, bath_type=bath_type, bath_time=bath_time))
     # responce.set_cookie('cookie', value = json.dumps(dic))
-    return responce
+    return make_response(
+        render_template("reserve.html",
+            today=now.strftime("%m/%d") ,
+            userid=userid,
+            times=times,
+            times_len=len(times),
+            reservation_small=reservation_small[1],
+            reservation_large=reservation_large[1],
+            bath_type=bath_type,
+            bath_time=bath_time
+        )
+    )
 
 @app.route("/reserve_resister", methods=["GET", "POST"])
 def reserve_register():
