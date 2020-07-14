@@ -21,10 +21,12 @@ while i < len(times):
     times[i] = times[i].strftime("%H:%M")
     i += 1
 
+# ログインページへの遷移
 @app.route("/", methods=["GET", "POST"])
 def hello():
     return render_template("index.html", Error=0)
 
+# 予約入力画面への遷移
 @app.route("/reserve", methods=["GET", "POST"])
 def login_manager():
     # ユーザ変数取得
@@ -128,6 +130,7 @@ def login_manager():
         )
     )
 
+# 予約の実行，予約完了画面への遷移
 @app.route("/reserve_resister", methods=["GET", "POST"])
 def reserve_register():
     # ユーザ変数取得
@@ -147,6 +150,13 @@ def reserve_register():
     #     i += 1
     # セッション認証
     if session['login_flag']:
+        # 予約状況再確認
+        sql = "SELECT SUM(CASE WHEN date = ? THEN 1 ELSE 0 END) FROM reserve WHERE bath_type=?"
+        cursor.execute(sql, desired_time, bath_type)
+        result = cursor.fetchone()
+        print(result)
+        if (result[0] >= 9 and bath_type == 1) or (result[0] >= 4 and bath_type == 0):
+            return render_template("index.html", Error=3)
         if session['reserved']:
             # DBの予約を更新
             sql = "UPDATE reserve SET bath_type=?, date=? WHERE userid=? AND date LIKE ?"
@@ -168,10 +178,12 @@ def reserve_register():
     session.pop('reserved', None)
     return render_template("reserve_success.html", desired_time=desired_time, userid=userid)
     
+# ユーザー登録への遷移
 @app.route("/user_regist_form", methods=["GET", "POST"])
 def user_regist_form():
     return render_template("user_regist_form.html")
 
+# ユーザー登録の実行，登録完了画面への遷移
 @app.route("/user_register", methods=["GET","POST"])
 def user_resister():
     # ユーザ変数取得
