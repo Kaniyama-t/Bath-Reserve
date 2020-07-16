@@ -126,7 +126,7 @@ def login_manager():
             if result[0] == userpassword:
                 session['userid'] = userid
                 session['login_flag'] = True
-                redirect(request.url) # /reserveページで更新した際に「フォームの内容を再度送信しますか？」と表示されるのを回避
+                redirect('/reserve') # /reserveページで更新した際に「フォームの内容を再度送信しますか？」と表示されるのを回避
             else:
                 session['userid'] = ''
                 session['login_flag'] = False
@@ -289,6 +289,12 @@ def user_resister():
     cnxn.close()
     # 返却処理
     return render_template(session['TemplateRootPath'] + "user_regist_success.html")
+
+@app.route("/logout", methods=["GET", "POST"])
+def logout():
+    session['login_flag'] = False
+    session['userid'] = False
+    return redirect('/')
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000, threaded=True)
