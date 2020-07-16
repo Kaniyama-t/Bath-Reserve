@@ -126,6 +126,7 @@ def login_manager():
             if result[0] == userpassword:
                 session['userid'] = userid
                 session['login_flag'] = True
+                redirect(request.url) # /reserveページで更新した際に「フォームの内容を再度送信しますか？」と表示されるのを回避
             else:
                 session['userid'] = ''
                 session['login_flag'] = False
