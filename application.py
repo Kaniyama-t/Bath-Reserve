@@ -51,12 +51,11 @@ def before_request():
     # *******************************************************
     # UI切替トリガ
     # --- 初回アクセス --------------------------------------
-    if ('TemplateRootPath' not in session):
+    if ('TemplateRootPath' not in request.cookies):
         SwitchUI = 'default'
     # --- 変更指定があったら(GET) ---------------------------
     elif (request.method == 'GET') and (request.args.get('ui',default=None)):
         SwitchUI = request.args.get('ui')
-        print(SwitchUI)
     # --- 変更指定があったら(POST) --------------------------
     elif (request.method == 'POST') and ('ui' in request.form):
         SwitchUI = request.form['ui']
@@ -69,17 +68,27 @@ def before_request():
     # --- 新バージョン --------------------------------------
     if SwitchUI == 'ver2':
         session['TemplateRootPath'] = 'mobile/'
+        session['switchUI'] = True
     # elif modeq == 'ver3':
     #     pass
     # ...
     # --- デフォルト ----------------------------------------
     elif SwitchUI:
         session['TemplateRootPath'] = ''
+        session['switchUI'] = True
     # --- 変更なし ------------------------------------------
     else:
-        pass
+        session['switchUI'] = False
+
+def after_request(responce):
+    if(session['switchUI'] == True):
+        responce.set_cookie("TemplateRootPath",session['TemplateRootPath'],secure=True,httponly=True)
+        session['switchUI'] = False
+    return responce
+    
 
 app.before_request(before_request)
+app.after_request(after_request)
 # --------------------------------
 # モバイル版対応コードここまで
 # --------------------------------

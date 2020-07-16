@@ -10,7 +10,7 @@
     </head>
     <body>
         <h1>浴室予約システム</h1>
-        <p>ようこそ，{{userid}}さん．<br>{{today}}の浴室の予約を行います．<br />ログアウトは<a href="./logout">こちら</a></p>
+        <p>ようこそ，{{userid}}さん．<br>{{today}}の浴室の予約を行います．<br />その他の操作：<a href="./reserve?ui=ver2">スマホ版への切り替え</a>，<a href="./logout">ログアウト</a></p>
         {% if Error == 1 %}
         <p id="error">ご希望の時間に予約することができませんでした．<br> 他の時間を選択してください．</p>
         {% endif %}
