@@ -53,6 +53,10 @@ def before_request():
     # --- 初回アクセス --------------------------------------
     if ('TemplateRootPath' not in request.cookies):
         SwitchUI = 'default'
+    # --- 前回のUI設定を復元 --------------------------------
+    elif ('TemplateRootPath' not in session):
+        session['TemplateRootPath'] = request.cookies['TemplateRootPath']
+        SwitchUI = None
     # --- 変更指定があったら(GET) ---------------------------
     elif (request.method == 'GET') and (request.args.get('ui',default=None)):
         SwitchUI = request.args.get('ui')
