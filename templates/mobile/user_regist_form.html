@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+            <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css"> 
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+            <style>
+            #error{
+                color: red;
+            }
+        </style>
+        <title>浴室予約システム</title>
+    </head>
+    <body>
+        <div class="w3-container" style="padding: 0;">
+            <div class="w3-panel w3-green" style="margin-top: 0;">
+                <p>
+                    <b style="display: inline-block;">浴室予約システム</b>
+                </p>
+            </div>
+        </div>
+        <div class="w3-container">
+            <h2>ユーザ新規登録</h2>
+        <div>
+            {% if Error == 1: %}
+            <p id=error>学籍番号が有効ではありません．</p>
+            {% elif Error == 2: %}
+            <p id=error>パスワードがすでに登録されています．</p>
+            {% endif %}
+            <p>
+                ユーザの新規登録を行います．<br>
+                学籍番号とパスワードを入力してください．<br>
+                ただし，セキュリティが万全である保証ができないので，他サービス等で使用しているパスワードの流用は避けてください．
+            </p>
+            <form action="/user_register" method="POST">
+                <label>学籍番号</label>
+                <input type="text" class="w3-input" name="userid" required/><br>
+                <label>パスワード</label>
+                <input type="password" class="w3-input" name="password" required/><br>
+                <input type="submit" class="w3-btn w3-ripple w3-green" value="登録"/>
+            </form>
+        </div>        
+        </div>
+    </body>
+</html>

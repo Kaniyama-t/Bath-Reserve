@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+    <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css"> 
+            <!-- <link rel="stylesheet" href="w3.css">  -->
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <style>
+            #logout{
+                margin: 0 0 0 auto;
+                float: right;
+            }
+            .nomargin{
+                margin: 0;
+                padding: 0;
+            }
+            /* Thick red border */
+            hr.n1 {
+                margin:5px 0;
+                border: 2px solid #4CAF50;
+            }
+
+            .bookdate{
+                font-size: 1em;
+                color: #3f51b5;
+                font-weight: 700;
+                border-bottom: #3f51b5 solid 0.5px;
+            }
+
+            .ohuro_choice_layout{
+                display: flex;
+                margin-top: 5px;
+                margin-bottom: 0;
+            }
+            button.ohuro_choice{
+                padding-top: 10px;
+                padding-bottom: 10px;
+                font-weight: 800;
+                font-size: 1em;
+                border-bottom:  3px solid #4CAF50;
+            }
+
+            .bath_container_visible{
+                visibility: visible;
+                display: inline;
+            }
+
+            .bath_container_hidden{
+                visibility: hidden;
+                display: none;
+            }
+
+            .offer_card{
+                margin: 0;
+            	border-radius: 5px;
+                border: #01579B solid 1px;
+            }
+            .offer_card:disabled{
+                margin: 0;
+                border-radius: 5px;
+                background-color: #ddd!important;
+                border: #666 solid 1px;
+            }
+            .offer_card_booking{
+                margin: 0;
+            	border-radius: 5px;
+                border: #4CAF50 solid 2px;
+            }
+            .offer_card_layout{
+                display: flex;
+                flex-direction: row;
+            }
+            .offer_left_field{
+                flex: 1;
+                display: flex;
+                justify-content: flex-start;
+                align-items: center;
+            }
+            .available_badge{
+                position: relative;
+                top:-5px;
+            	display: inline-block;
+            	font-size: 16px;
+	            padding: .8em 1.6em .4em .8em;
+	            position: relative;
+	            color: #fff;
+	            z-index: 1;
+            }
+            .available_badge::before {
+            	content: "";
+	            position: absolute;
+	            top: 0;
+	            right: 0;
+	            bottom: 0;
+	            left: 0;
+	            z-index: -1;
+            	background: #01579B;
+    	        transform: scaleY(1.3) perspective(.6em) rotateX(5deg);
+	            transform-origin: bottom left;
+            	border-radius: 0px 8px 8px 0;
+            }
+            .offer_label{
+                display: flex;
+                margin-top: 8px;
+                margin-bottom: 8px;
+                margin-left: 15px;
+                flex-direction:column;
+            }
+            .offer_timerange_label{
+                font-size: large;
+                font-weight: 1000;
+                justify-content: flex-start;
+                align-items: center;
+            }
+            .offer_detail_label{
+                font-size: 0.8em;
+                justify-content: flex-start;
+                align-items: center;
+            }
+            .offer_numofpeople{
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+            }
+        </style>
+        <title>浴室予約システム</title>
+        <script>
+            function ohuro_switch(id){
+
+                if(document.getElementById(id).classList.contains('w3-green')) return;
+
+                var ohuro_large_btn = document.getElementById("ohuro_large_btn");
+                var ohuro_small_btn = document.getElementById("ohuro_small_btn");
+                var bath_container1 = document.getElementById("bath_container1");
+                var bath_container0 = document.getElementById("bath_container0");
+
+                bath_container1.classList.toggle("bath_container_visible");
+                bath_container1.classList.toggle("bath_container_hidden");
+                bath_container1.classList.toggle("w3-animate-left");
+                bath_container0.classList.toggle("bath_container_visible");
+                bath_container0.classList.toggle("bath_container_hidden");
+                bath_container0.classList.toggle("w3-animate-right");
+                ohuro_large_btn.classList.toggle("w3-green");
+                ohuro_small_btn.classList.toggle("w3-green");
+            }
+        </script>
+    </head>
+    <body>
+        <div class="w3-container" style="padding: 0;">
+
+        <div class="w3-panel w3-green" style="margin-top: 0;">
+            <p>
+                <b style="display: inline-block;">浴室予約システム</b>
+                <a id="logout" href="/"><i class="fa fa-caret-right" aria-hidden="true"></i> Logout</a>
+            </p>
+        </div>
+    </div>
+    <div class="w3-container">
+        <p>ようこそ，{{userid}}さん．<br />現在<span class="bookdate">{{today}}</span>の予約を受け付けています．<br />
+        {% if bath_type == '' %}
+        <div class="w3-container w3-pannel w3-yellow" style="border-radius: 5px;">
+            <h5>本日分はまだ予約されていません．</h5>
+        </div>
+        {% else %}
+        {% set l_bathtypes = [1,0] %}
+        {% for l_bathtype in l_bathtypes %}
+        {% if l_bathtype == 0 %}
+
+            {% set l_bathtype_text = '小風呂' %}
+            {% set default_visiblity = 'bath_container_hidden' %}
+            {% set MaxBooking = 4 %}
+            {% set reservation = reservation_small %}
+            {% set offerboard_default_animation = '' %}
+
+        {% else %}
+
+            {% set l_bathtype_text = '大風呂' %}
+            {% set default_visiblity = 'bath_container_visible' %}
+            {% set MaxBooking = 9 %}
+            {% set reservation = reservation_large %}
+            {% set offerboard_default_animation = 'w3-animate-left' %}
+
+        {% endif %}
+        {% for i in range(times_len-1) %}
+
+        <!-- BOOKED -->
+        {% if bath_type == l_bathtype and bath_time == times[i] %}
+            {% set card_border = '#4CAF50' %}
+            {% set card_available = False %}
+            {% set card_disable_reason = 'この時間帯を選択中' %}
+            {% set card_disable_reason_color = 'green' %}
+        <button class=" w3-panel offer_card" style="padding:0;width:100%;" onclick="" disabled>
+      
+             <!-- inside layout of offer card -->
+              <div class="w3-row offer_card_layout">
+                  <div class="w3-rest offer_left_field">
+                      <!-- <span class="available_badge">
+                          予約可能 <i class="fa fa-check-circle" aria-hidden="true"></i>
+                      </span> -->
+                      <p class="offer_label">
+                          <span class="offer_timerange_label">
+                              {% if card_available != True %}
+                              <span style="color: {{card_disable_reason_color}};">{{card_disable_reason}}</span><br />
+                              {% endif %}
+                              {{times[i]}} - {{times[i+1]}}
+                          </span><br />
+                          <span class="offer_detail_label">
+                              {{l_bathtype_text}}・{% if i < 7 %}1-2年優先{% else %}高学年優先{% endif %}
+                          </span>
+                      </p>
+                  </div>
+                  <div class="w3-col w3-right w3-container offer_numofpeople" style="width:100px;overflow: hidden;">
+                      <p>{{reservation[i]}}/{{MaxBooking}}人</p>
+                  </div>
+                  <div class="w3-container offer_numofpeople" style="width:30px;background-color: lightblue;">
+                      <span><i class="fa fa-caret-right" aria-hidden="true"></i></span>
+                  </div>
+              </div>
+        </button>
+        {% endif %}
+        {% endfor %}
+        {% endfor %}
+        {% endif %}
+        </p>
+        <hr class="n1" />
+        <h4>予約選択・更新</h4>
+        時間帯一覧から入浴時間をお選びください。
+    </div>
+<!-- 
+    {% if Error == 1 %}
+    <div class="w3-container">
+        <div class="w3-panel w3-red">
+        <p id="error">ご希望の時間に予約することができませんでした．<br> 他の時間を選択してください．</p>
+        </div>
+    </div>
+    {% endif %} -->
+
+    <div class="w3-container w3-panel ohuro_choice_layout">
+        <button id="ohuro_large_btn" class="w3-button w3-half w3-container ohuro_choice w3-green" onclick="ohuro_switch('ohuro_large_btn')">大風呂</button>
+        <button id="ohuro_small_btn" class="w3-button w3-half w3-container ohuro_choice" onclick="ohuro_switch('ohuro_small_btn')">小風呂</button>
+    </div>
+
+    <div style="display: flex;">
+
+    {% set l_bathtypes = [1,0] %}
+    {% for l_bathtype in l_bathtypes %}
+        
+        {% if l_bathtype == 0 %}
+
+            {% set l_bathtype_text = '小風呂' %}
+            {% set default_visiblity = 'bath_container_hidden' %}
+            {% set MaxBooking = 4 %}
+            {% set reservation = reservation_small %}
+            {% set offerboard_default_animation = '' %}
+
+        {% else %}
+
+            {% set l_bathtype_text = '大風呂' %}
+            {% set default_visiblity = 'bath_container_visible' %}
+            {% set MaxBooking = 9 %}
+            {% set reservation = reservation_large %}
+            {% set offerboard_default_animation = 'w3-animate-left' %}
+
+        {% endif %}
+        
+
+        <div id="bath_container{{l_bathtype}}" class="w3-container {{default_visiblity}} {{offerboard_default_animation}}">
+         <!-- style="visibility: {{default_visiblity}};" -->
+
+            {% for i in range(times_len-1) %}
+
+                <!-- BOOKED -->
+                {% if bath_type == l_bathtype and bath_time == times[i] %}
+                    {% set card_border = '#4CAF50' %}
+                    {% set card_available = False %}
+                    {% set card_disable_reason = 'この時間帯を選択中' %}
+                    {% set card_disable_reason_color = 'green' %}
+                {% elif reservation[i] >= MaxBooking %}
+                    {% set card_border = '#ddd' %}
+                    {% set card_available = False %}
+                    {% set card_disable_reason = '満員' %}
+                    {% set card_disable_reason_color = 'red' %}
+                {% else %}
+                    {% set card_border = '#4CAF50' %}
+                    {% set card_available = True %}
+                {% endif %}
+
+                <button class=" w3-panel offer_card" style="padding:0;width:100%;" onclick="document.offer_form{{l_bathtype}}[{{i}}].submit();" {% if card_available != True %}disabled{% endif %}>
+
+                  <!-- Send data when click offer card -->
+                    <form name="offer_form{{l_bathtype}}" action="/reserve_resister" method="POST">
+                        <input type="hidden" name="desired_time" value="{{i+(l_bathtype*100)}}">
+                    </form>
+            
+                   <!-- inside layout of offer card -->
+                    <div class="w3-row offer_card_layout">
+                        <div class="w3-rest offer_left_field">
+                            <!-- <span class="available_badge">
+                                予約可能 <i class="fa fa-check-circle" aria-hidden="true"></i>
+                            </span> -->
+                            <p class="offer_label">
+                                <span class="offer_timerange_label">
+                                    {% if card_available != True %}
+                                    <span style="color: {{card_disable_reason_color}};">{{card_disable_reason}}</span><br />
+                                    {% endif %}
+                                    {{times[i]}} - {{times[i+1]}}
+                                </span><br />
+                                <span class="offer_detail_label">
+                                    {{l_bathtype_text}}・{% if i < 7 %}1-2年優先{% else %}高学年優先{% endif %}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="w3-col w3-right w3-container offer_numofpeople" style="width:100px;overflow: hidden;">
+                            <p>{{reservation[i]}}/{{MaxBooking}}人</p>
+                        </div>
+                        <div class="w3-container offer_numofpeople" style="width:30px;background-color: lightblue;">
+                            <span><i class="fa fa-caret-right" aria-hidden="true"></i></span>
+                        </div>
+                    </div>
+                </button> 
+            {% endfor %}
+
+
+        </div>
+    {% endfor %}
+    </div>
+
+    <div class="w3-container" style="padding: 0;">
+        <div class="w3-panel" style="margin-bottom: 0; background-color: #004d33;">
+            <p>
+                end page
+            </p>
+        </div>
+    </div>
+    </body>
+</html>

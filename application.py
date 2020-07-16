@@ -24,7 +24,7 @@ while i < len(times):
 # ログインページへの遷移
 @app.route("/", methods=["GET", "POST"])
 def hello():
-    return render_template("index.html", Error=0)
+    return render_template("mobile/index.html", Error=0)
 
 # 予約入力画面への遷移
 @app.route("/reserve", methods=["GET", "POST"])
@@ -50,44 +50,43 @@ def login_manager():
         userpassword = hashlib.sha256(userpassword.encode()).hexdigest()
         i += 1
     if userid is "" or userpassword is "":
-        return render_template("index.html", Error=1)
+        return render_template("mobile/index.html", Error=1)
     elif result[0] != userpassword:
-        return render_template("index.html", Error=2)
+        return render_template("mobile/index.html", Error=2)
     
     # initialize variable
     now = datetime.datetime.now()
     today = now.strftime("%Y_%m_%d")
+    today = "2020_07_20"
 
     # ----------------------------------------------------------
     # 現時点の予約時間帯あたりの予約者数を取得
     # Get Today's number of RESERVATION.
     # ----------------------------------------------------------
     #
-    #    |---------------------|-------------|
-    #    |       date          | reserve_cnt |
-    #    |---------------------|-------------|
-    # Ex.| 2020-07-14 17:30:00 |      3      | 
-    #    |---------------------|-------------|
-    # Ex.| 2020-07-14 17:55:00 |      1      | 
-    #    |---------------------|-------------|
-    #    ～～～～～～～～～～～～～～～～～～～
+    #    |-------------|
+    #    | reserve_cnt |
+    #    |-------------|
+    # Ex.|      3      | 
+    #    |-------------|
+    # Ex.|      1      | 
+    #    |-------------|
+    #    ～～～～～～～
     #
     # Note: only "today" argment for sql command must not escape. Koreha Siyou Desu.
-    get_today_cnt = "SELECT date, count(userid) As reserve_cnt FROM reserve " \
-                  + "WHERE bath_type = ? " \
-                  + "group by date HAVING date LIKE '"+today+"%'" \
-                  + "order by date asc;"
+    get_today_cnt = "SELECT count(userid) As reserve_cnt FROM reserve " \
+                  + "WHERE bath_type = ? and date LIKE '"+today
     print(get_today_cnt)
     
     # SMALL
-    reservation_small = cursor.execute(get_today_cnt, 0).fetchall()# [('2020_07_141990-01-01 20:20:00',4), ...]
-    reservation_small = np.array(reservation_small).T.tolist()# [['2020_07_141990-01-01 20:20:00', ... ], ['4', ... ]]
-    print(reservation_small)
+    reservation_small = []
+    for i in range(len(times)-1):
+        reservation_small.append(cursor.execute(get_today_cnt+" "+times[i]+"';", 0).fetchall()[0][0])
 
     # LARGE
-    reservation_large = cursor.execute(get_today_cnt, 1).fetchall() # [('2020_07_141990-01-01 20:20:00',4), ...]
-    reservation_large = np.array(reservation_large).T.tolist()# [['2020_07_141990-01-01 20:20:00', ... ], ['4', ... ]]
-    print(reservation_large)
+    reservation_large = []
+    for i in range(len(times)-1):
+        reservation_large.append(cursor.execute(get_today_cnt+" "+times[i]+"';", 1).fetchall()[0][0])
 
     # ----------------------------------------------------------
     # 新規予約か、予約更新かをチェック
@@ -96,11 +95,14 @@ def login_manager():
     sql = "SELECT bath_type, date FROM reserve WHERE userid=? AND date LIKE ?;"
     cursor.execute(sql, userid, today+'%')
 
-    result = cursor.fetchone() or ["",""]
-    reserved = (result == None)
+    result = cursor.fetchone()
+    reserved = (result != None)
+
+    result = result or ['','']
     bath_type = result[0]
     bath_time = str(result[1])[11:]
-    
+    print(bath_time)
+
     # ----------------------------------------------------------
     # DB切断
     # 
@@ -118,13 +120,13 @@ def login_manager():
     # dic = {'userid':userid, 'login_flag':True, 'reserved':reserved}
     # responce.set_cookie('cookie', value = json.dumps(dic))
     return make_response(
-        render_template("reserve.html",
+        render_template("mobile/reserve.html",
             today=now.strftime("%m/%d") ,
             userid=userid,
             times=times,
             times_len=len(times),
-            reservation_small=reservation_small[1],
-            reservation_large=reservation_large[1],
+            reservation_small=reservation_small,
+            reservation_large=reservation_large,
             bath_type=bath_type,
             bath_time=bath_time
         )
@@ -151,15 +153,16 @@ def reserve_register():
     # セッション認証
     if session['login_flag']:
         # 予約状況再確認
-        sql = "SELECT SUM(CASE WHEN date = ? THEN 1 ELSE 0 END) FROM reserve WHERE bath_type=?"
+        sql = "SELECT SUM(CASE WHEN date = ? THEN 1 ELSE 0 END) FROM reserve WHERE bath_type=?;"
         cursor.execute(sql, desired_time, bath_type)
         result = cursor.fetchone()
+        result[0] = result[0] or 0
         print(result)
         if (result[0] >= 9 and bath_type == 1) or (result[0] >= 4 and bath_type == 0):
             return render_template("index.html", Error=3)
         if session['reserved']:
             # DBの予約を更新
-            sql = "UPDATE reserve SET bath_type=?, date=? WHERE userid=? AND date LIKE ?"
+            sql = "UPDATE reserve SET bath_type=?, date=? WHERE userid=? AND date LIKE ?;"
             cursor.execute(sql, str(bath_type), desired_time, session['userid'], today+"%")
             cnxn.commit()
         else:
@@ -176,12 +179,12 @@ def reserve_register():
     session.pop('userid', None)
     session.pop('login_flag', None)
     session.pop('reserved', None)
-    return render_template("reserve_success.html", desired_time=desired_time, userid=userid)
+    return render_template("mobile/reserve_success.html", desired_time=desired_time, userid=userid)
     
 # ユーザー登録への遷移
 @app.route("/user_regist_form", methods=["GET", "POST"])
 def user_regist_form():
-    return render_template("user_regist_form.html")
+    return render_template("mobile/user_regist_form.html")
 
 # ユーザー登録の実行，登録完了画面への遷移
 @app.route("/user_register", methods=["GET","POST"])
@@ -203,7 +206,7 @@ def user_resister():
     cursor.execute(sql, userid)
     result = cursor.fetchone()
     if(result[0] != ""):
-        return render_template("user_regist_form.html", Error=2)
+        return render_template("mobile/user_regist_form.html", Error=2)
     # パスワードストレッチング
     i = 0
     while i<10:
@@ -217,7 +220,7 @@ def user_resister():
     cursor.close()
     cnxn.close()
     # 返却処理
-    return render_template("user_regist_success.html")
+    return render_template("mobile/user_regist_success.html")
 
 if __name__ == "__main__":
     app.run(debug=False, host="0.0.0.0", port=5000, threaded=True)
