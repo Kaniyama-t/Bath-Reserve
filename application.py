@@ -18,6 +18,9 @@ app.config.update(
     SESSION_COOKIE_SAMESITE='Lax',
 )
 
+# Cookieの保存期間
+cookie_maxAge = 60 * 60 * 24 * 90
+
 # 入浴時間リスト
 times = []
 times.append(datetime.datetime.strptime('17:00', "%H:%M"))
@@ -79,15 +82,12 @@ def before_request():
     # --- デフォルト ----------------------------------------
     elif SwitchUI:
         session['TemplateRootPath'] = ''
-        session['switchUI'] = True
     # --- 変更なし ------------------------------------------
     else:
-        session['switchUI'] = False
+        pass
 
 def after_request(responce):
-    if(session['switchUI'] == True):
-        responce.set_cookie("TemplateRootPath",session['TemplateRootPath'],secure=True,httponly=True)
-        session['switchUI'] = False
+    responce.set_cookie("TemplateRootPath",session['TemplateRootPath'],max_age=cookie_maxAge,secure=True,httponly=True)
     return responce
     
 
@@ -127,10 +127,11 @@ def login_manager():
         if ('userid' in request.form) and ('password' in request.form) and (request.form["userid"]) and (request.form["password"]):
             userid = request.form["userid"]
             userpassword = request.form["password"]
+            autosave = ('save_authentification' in request.form)
         elif ('autologin_userid' in request.cookies) and ('autologin_userpassword' in request.cookies):
             userid = request.cookies.get('autologin_userid',type=str)
             userpassword = request.cookies.get('autologin_userpassword',type=str)
-            print(userpassword)
+            autosave = True
         else:
             # お前...さてはログイン情報入れずにリクエストしたやろ...
             return render_template(session['TemplateRootPath'] + "index.html", Error=1)
@@ -140,21 +141,23 @@ def login_manager():
         result = cursor.fetchone()
         # パスワード認証
         i = 0
+        hashedpass = userpassword
         while i<10:
-            userpassword = hashlib.sha256(userpassword.encode()).hexdigest()
+            hashedpass = hashlib.sha256(hashedpass.encode()).hexdigest()
             i += 1
             
         # パスワードによる認証結果の分岐
         # --- 成功 --------------------------------------------------------------
-        if result[0] == userpassword:
+        if result[0] == hashedpass:
             session['userid'] = userid
             session['login_flag'] = True
 
             responce = redirect('/reserve') # /reserveページで更新した際に「フォームの内容を再度送信しますか？」と表示されるのを回避
             # 自動ログインの登録
-            if ('save_authentification' in request.form) and (request.form['save_authentification'] == 'yes'):
-                responce.set_cookie("autologin_userid",request.form['userid'],secure=True,httponly=True)
-                responce.set_cookie("autologin_userpassword",request.form["password"],secure=True,httponly=True)
+            if autosave:
+                responce.set_cookie("autologin_userid",userid,max_age=cookie_maxAge,secure=True,httponly=True)
+                responce.set_cookie("autologin_userpassword",userpassword,max_age=cookie_maxAge,secure=True,httponly=True)
+            
             return responce
         # --- 失敗 --------------------------------------------------------------
         else:
