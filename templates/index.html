@@ -24,13 +24,15 @@
             <form action="/reserve" method="POST">
                 <input type="text" name="userid" placeholder="学籍番号" required/><br>
                 <input type="password" name="password" placeholder="パスワード" required/><br>
+                <input type="checkbox" id="save_authentification" name="save_authentification" value="yes">
+                <label for="save_authentification">IDとパスワードを保存し，次回以降自動でログインする</label><br><br>
                 <input type="submit" value="ログイン"/>
             </form>
         </div>
+        <br />
         <div>
             ユーザ登録はこちら → <a href="/user_regist_form">新規登録</a>
         </div>
-        <br /><br />
         <div>
             スマホ用新UIがリリースされました → <a href="/?ui=ver2">スマホ版ページへ切替</a>
         </div>

@@ -186,10 +186,8 @@
         <!-- BOOKED -->
         {% if bath_type == l_bathtype and bath_time == times[i] %}
             {% set card_border = '#4CAF50' %}
-            {% set card_available = False %}
-            {% set card_disable_reason = 'この時間帯を選択中' %}
             {% set card_disable_reason_color = 'green' %}
-        <button class=" w3-panel offer_card" style="padding:0;width:100%;" onclick="" disabled>
+        <button class=" w3-panel offer_card" style="padding:0;width:100%;">
       
              <!-- inside layout of offer card -->
               <div class="w3-row offer_card_layout">
@@ -199,9 +197,7 @@
                       </span> -->
                       <p class="offer_label">
                           <span class="offer_timerange_label">
-                              {% if card_available != True %}
-                              <span style="color: {{card_disable_reason_color}};">{{card_disable_reason}}</span><br />
-                              {% endif %}
+                              <span style="color: {{card_disable_reason_color}};">この時間帯を選択中</span><br />
                               {{times[i]}} - {{times[i+1]}}
                           </span><br />
                           <span class="offer_detail_label">

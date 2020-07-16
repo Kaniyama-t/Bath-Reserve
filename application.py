@@ -45,7 +45,7 @@ while i < len(times):
 # POSTかGETのすべてのリクエストが処理される前に実行
 def before_request():
     # *******************************************************
-    # Login
+    # Login Session & Auto Login
     if ('login_flag' not in session):
         session['login_flag'] = False
     # *******************************************************
@@ -87,6 +87,9 @@ app.before_request(before_request)
 # ログインページへの遷移
 @app.route("/", methods=["GET", "POST"])
 def hello():
+    if ('autologin_userid' in request.cookies) and ('autologin_userpassword' in request.cookies):
+        return redirect('/reserve')
+
     return render_template(session['TemplateRootPath'] + "index.html", Error=0)
 
 # 予約入力画面への遷移
@@ -109,33 +112,48 @@ def login_manager():
     if (not session['login_flag']):
         # ちゃんとuseridとpasswordに値が入っていて，未登録ユーザじゃないなら
         if ('userid' in request.form) and ('password' in request.form) and (request.form["userid"]) and (request.form["password"]):
-            
             userid = request.form["userid"]
             userpassword = request.form["password"]
-
-            sql = "SELECT userpassword FROM users WHERE userid = ?"
-            cursor.execute(sql, userid)
-            result = cursor.fetchone()
-            # パスワード認証
-            i = 0
-            while i<10:
-                userpassword = hashlib.sha256(userpassword.encode()).hexdigest()
-                i += 1
-            
-            # パスワードによる認証結果の分岐
-            if result[0] == userpassword:
-                session['userid'] = userid
-                session['login_flag'] = True
-                redirect('/reserve') # /reserveページで更新した際に「フォームの内容を再度送信しますか？」と表示されるのを回避
-            else:
-                session['userid'] = ''
-                session['login_flag'] = False
-                return render_template(session['TemplateRootPath'] + "index.html", Error=2)
-            
-
-        # お前...さてはログイン情報入れずにリクエストしたやろ...
+        elif ('autologin_userid' in request.cookies) and ('autologin_userpassword' in request.cookies):
+            userid = request.cookies.get('autologin_userid',type=str)
+            userpassword = request.cookies.get('autologin_userpassword',type=str)
+            print(userpassword)
         else:
+            # お前...さてはログイン情報入れずにリクエストしたやろ...
             return render_template(session['TemplateRootPath'] + "index.html", Error=1)
+
+        sql = "SELECT userpassword FROM users WHERE userid = ?"
+        cursor.execute(sql, userid)
+        result = cursor.fetchone()
+        # パスワード認証
+        i = 0
+        while i<10:
+            userpassword = hashlib.sha256(userpassword.encode()).hexdigest()
+            i += 1
+            
+        # パスワードによる認証結果の分岐
+        # --- 成功 --------------------------------------------------------------
+        if result[0] == userpassword:
+            session['userid'] = userid
+            session['login_flag'] = True
+
+            responce = redirect('/reserve') # /reserveページで更新した際に「フォームの内容を再度送信しますか？」と表示されるのを回避
+            # 自動ログインの登録
+            if ('save_authentification' in request.form) and (request.form['save_authentification'] == 'yes'):
+                responce.set_cookie("autologin_userid",request.form['userid'],secure=True,httponly=True)
+                responce.set_cookie("autologin_userpassword",request.form["password"],secure=True,httponly=True)
+            return responce
+        # --- 失敗 --------------------------------------------------------------
+        else:
+            session['userid'] = ''
+            session['login_flag'] = False
+            responce = make_response(
+                render_template(session['TemplateRootPath'] + "index.html", Error=2)
+            )
+            responce.set_cookie("autologin_userid",'',expires=0)
+            responce.set_cookie("autologin_userpassword",'',expires=0)
+            return responce
+            
     else:
         userid = session['userid']
     
@@ -247,7 +265,7 @@ def reserve_register():
     session.pop('userid', None)
     session.pop('login_flag', None)
     session.pop('reserved', None)
-    return render_template(session['TemplateRootPath'] + "reserve_success.html", desired_time=desired_time, userid=userid)
+    return render_template(session['TemplateRootPath'] + "reserve_success.html", desired_time=desired_time, userid=userid, autologin=('autologin_userid' in request.cookies))
     
 # ユーザー登録への遷移
 @app.route("/user_regist_form", methods=["GET", "POST"])
@@ -294,7 +312,10 @@ def user_resister():
 def logout():
     session['login_flag'] = False
     session['userid'] = False
-    return redirect('/')
+    responce = redirect('/')
+    responce.set_cookie("autologin_userid",'',expires=0)
+    responce.set_cookie("autologin_userpassword",'',expires=0)
+    return responce
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000, threaded=True)
