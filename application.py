@@ -56,45 +56,22 @@ def login_manager():
     
     # initialize variable
     now = datetime.datetime.now()
-    today = now.strftime("%Y_%m_%d")
-    today = "2020_07_20"
-
-    # ----------------------------------------------------------
-    # 現時点の予約時間帯あたりの予約者数を取得
-    # Get Today's number of RESERVATION.
-    # ----------------------------------------------------------
-    #
-    #    |-------------|
-    #    | reserve_cnt |
-    #    |-------------|
-    # Ex.|      3      | 
-    #    |-------------|
-    # Ex.|      1      | 
-    #    |-------------|
-    #    ～～～～～～～
-    #
-    # Note: only "today" argment for sql command must not escape. Koreha Siyou Desu.
-    get_today_cnt = "SELECT count(userid) As reserve_cnt FROM reserve " \
-                  + "WHERE bath_type = ? and date LIKE '"+today
-    print(get_today_cnt)
+    today = now.strftime("%Y_%m_%d ")
+    sql = "SELECT "
+    i = 0
+    while i < len(times)-1:
+        sql = sql + "SUM(CASE WHEN date = '" + today + times[i] + "' THEN 1 ELSE 0 END), "
+        i += 1
+    sql_small = sql[:-2] +" FROM reserve WHERE bath_type = 0"
+    sql_large = sql[:-2] +" FROM reserve WHERE bath_type = 1"
+    cursor.execute(sql_small)
+    reservation_small = cursor.fetchone()
+    cursor.execute(sql_large)
+    reservation_large = cursor.fetchone()
+    # 既存の自身の予約を確認
+    sql = "SELECT bath_type, date FROM reserve WHERE userid=? AND date LIKE ?"
+    cursor.execute(sql, userid, today+"%")
     
-    # SMALL
-    reservation_small = []
-    for i in range(len(times)-1):
-        reservation_small.append(cursor.execute(get_today_cnt+" "+times[i]+"';", 0).fetchall()[0][0])
-
-    # LARGE
-    reservation_large = []
-    for i in range(len(times)-1):
-        reservation_large.append(cursor.execute(get_today_cnt+" "+times[i]+"';", 1).fetchall()[0][0])
-
-    # ----------------------------------------------------------
-    # 新規予約か、予約更新かをチェック
-    # 
-    # ----------------------------------------------------------
-    sql = "SELECT bath_type, date FROM reserve WHERE userid=? AND date LIKE ?;"
-    cursor.execute(sql, userid, today+'%')
-
     result = cursor.fetchone()
     reserved = (result != None)
 
