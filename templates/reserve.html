@@ -102,25 +102,24 @@
                     <tr>
                         <th>予約</th>
                         {% for i in range(times_len-2) %}
-                            {{bath_time}}{{times[i]}}
-                            {% if bath_type == 2 and bath_time == times[i] %}
-                                {% if i < 5 %}
+                            {% if i < 5 %}
+                                {% if bath_type == 2 and bath_time == times[i] %}
                                     <th> <input type="radio" name="desired_time" value="{{i+200}}" checked="checked"> <br> 予約済 </th>
                                 {% else %}
-                                    <th> <input type="radio" name="desired_time" value="{{i+201}}" checked="checked"> <br> 予約済 </th>
+                                    {% if reservation_purple[i] >= 6 %}
+                                    <th> <input type="radio" name="desired_time" value="{{i+200}}" disabled> </th>
+                                    {% else %}
+                                    <th> <input type="radio" name="desired_time" value="{{i+200}}"> </th>
+                                    {% endif %}
                                 {% endif %}
                             {% else %}
-                                {% if i < 5 %}
-                                    {% if reservation_purple[i] >= 6 %}
-                                        <th> <input type="radio" name="desired_time" value="{{i+200}}" disabled> </th>
-                                    {% else %}
-                                        <th> <input type="radio" name="desired_time" value="{{i+200}}"> </th>
-                                    {% endif %}
+                                {% if bath_type == 2 and bath_time == times[i+1] %}
+                                    <th> <input type="radio" name="desired_time" value="{{i+201}}" checked="checked"> <br> 予約済 </th>
                                 {% else %}
                                     {% if reservation_purple[i] >= 6 %}
-                                        <th> <input type="radio" name="desired_time" value="{{i+201}}" disabled> </th>
+                                    <th> <input type="radio" name="desired_time" value="{{i+201}}" disabled> </th>
                                     {% else %}
-                                        <th> <input type="radio" name="desired_time" value="{{i+201}}"> </th>
+                                    <th> <input type="radio" name="desired_time" value="{{i+201}}"> </th>
                                     {% endif %}
                                 {% endif %}
                             {% endif %}
