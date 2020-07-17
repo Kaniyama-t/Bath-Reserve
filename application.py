@@ -7,6 +7,7 @@ import json
 from my_server_setting import server, database, username, password, driver 
 app = Flask(__name__)
 app.secret_key = str(random.randrange(9999999999999999))
+app.jinja_env.add_extension('jinja2.ext.loopcontrols')
 
 # 入浴時間リスト
 # 七宝寮
@@ -56,7 +57,7 @@ def login_manager():
     while i<10:
         userpassword = hashlib.sha256(userpassword.encode()).hexdigest()
         i += 1
-    if userid is "" or userpassword is "":
+    if userid == "" or userpassword == "":
         return render_template("index.html", Error=1)
     elif result[0] != userpassword:
         return render_template("index.html", Error=2)
@@ -68,28 +69,32 @@ def login_manager():
     # DBから予約状況取得
     now = datetime.datetime.now()
     today = now.strftime("%Y_%m_%d ")
+    # 七宝寮 or 紫雲寮
     sql = "SELECT "
     i = 0
-    # 七宝寮 or 紫雲寮
-    if dormitory_type == 0:
-        while i < len(times_cloisonne)-1:
-            sql = sql + "SUM(CASE WHEN date = '" + today + times_cloisonne[i] + "' THEN 1 ELSE 0 END), "
+    while i < len(times_cloisonne)-1:
+        sql = sql + "SUM(CASE WHEN date = '" + today + times_cloisonne[i] + "' THEN 1 ELSE 0 END), "
+        i += 1
+    sql_small = sql[:-2] +" FROM reserve WHERE bath_type = 0"
+    sql_large = sql[:-2] +" FROM reserve WHERE bath_type = 1"
+    cursor.execute(sql_small)
+    reservation_small = cursor.fetchone()
+    cursor.execute(sql_large)
+    reservation_large = cursor.fetchone()
+    sql = "SELECT "
+    i = 0
+    while i < len(times_purple)-1:
+        sql = sql + "SUM(CASE WHEN date = '" + today + times_purple[i] + "' THEN 1 ELSE 0 END), "
+        i += 1
+        if i == 5:
             i += 1
-        sql_small = sql[:-2] +" FROM reserve WHERE bath_type = 0"
-        sql_large = sql[:-2] +" FROM reserve WHERE bath_type = 1"
-        cursor.execute(sql_small)
-        reservation_small = cursor.fetchone()
-        cursor.execute(sql_large)
-        reservation_large = cursor.fetchone()
-    elif dormitory_type == 1:
-        while i < len(times_purple)-1:
-            sql = sql + "SUM(CASE WHEN date = '" + today + times_purple[i] + "' THEN 1 ELSE 0 END), "
-            i += 1
-            if i == 5:
-                i += 1
-        sql_purple = sql[:-2] +"FROM reserve WHERE bath_type = 2"
-        cursor.execute(sql_purple)
-        reservation_purple = cursor.fetchone()
+    print(sql)
+    sql_purple = sql[:-2] +"FROM reserve WHERE bath_type = 2"
+    cursor.execute(sql_purple)
+    reservation_purple = cursor.fetchone()
+    print(reservation_purple)
+    print(times_purple[5])
+    print(len(times_purple))
     # 既存の自身の予約を確認
     sql = "SELECT bath_type, date FROM reserve WHERE userid=? AND date LIKE ?"
     cursor.execute(sql, userid, today+"%")
@@ -111,10 +116,10 @@ def login_manager():
     session['reserved'] = reserved
     session['dormitory_type'] = dormitory_type
     if dormitory_type == 0:
-        responce = make_response(render_template("reserve.html",today=now.strftime("%m/%d") ,userid=userid, times=times_cloisonne, times_len=len(times_cloisonne), reservation_small=reservation_small, reservation_large=reservation_large, bath_type=bath_type, bath_time=bath_time, dormitory_type=dormitory_type))
+        responce = make_response(render_template("reserve.html",today=now.strftime("%m/%d") ,userid=userid, times=times_cloisonne, times_len=len(times_cloisonne), reservation_small=reservation_small, reservation_large=reservation_large, reservation_purple=reservation_purple,bath_type=bath_type, bath_time=bath_time, dormitory_type=dormitory_type))
         return responce
     elif dormitory_type == 1:
-        responce = make_response(render_template("reserve.html",today=now.strftime("%m/%d") ,userid=userid, times=times_purple, times_len=len(times_purple), reservation_purple=reservation_purple, bath_type=bath_type, bath_time=bath_time, dormitory_type=dormitory_type))
+        responce = make_response(render_template("reserve.html",today=now.strftime("%m/%d") ,userid=userid, times=times_purple, times_len=len(times_purple), reservation_small=reservation_small, reservation_large=reservation_large, reservation_purple=reservation_purple, bath_type=bath_type, bath_time=bath_time, dormitory_type=dormitory_type))
         return responce
 
 # 予約の実行，予約完了画面への遷移
@@ -206,4 +211,4 @@ def user_resister():
     return render_template("user_regist_success.html")
 
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=5000, threaded=True)
+    app.run(debug=True, host="0.0.0.0", port=5000, threaded=True)
