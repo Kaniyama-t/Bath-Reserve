@@ -91,31 +91,36 @@
                     </tr>
                     <tr>
                         <th>予約状況</th>
-                        {% for i in range(times_len-1) %}
-                            {% if i == 5 %}
-                                {% continue %}
+                        {% for i in range(times_len-2) %}
+                            {% if reservation_purple[i] == None %}
+                                <th> 0/6 </th>
                             {% else %}
-                                {% if reservation_purple[i] == None %}
-                                    <th> 0/6 </th>
-                                {% else %}
-                                    <th> {{reservation_purple[i]}}/6 </th>
-                                {% endif %}
+                                <th> {{reservation_purple[i]}}/6 </th>
                             {% endif %}
                         {% endfor %}
                     </tr>
                     <tr>
                         <th>予約</th>
-                        {% for i in range(times_len-1) %}
-                            {% if i == 5 %}
-                                {% continue %}
-                            {% else %}
-                                {% if bath_type == 2 and bath_time == times[i] %}
+                        {% for i in range(times_len-2) %}
+                            {{bath_time}}{{times[i]}}
+                            {% if bath_type == 2 and bath_time == times[i] %}
+                                {% if i < 5 %}
                                     <th> <input type="radio" name="desired_time" value="{{i+200}}" checked="checked"> <br> 予約済 </th>
                                 {% else %}
-                                    {% if reservation_large[i] >= 6 %}
-                                    <th> <input type="radio" name="desired_time" value="{{i+200}}" disabled> </th>
+                                    <th> <input type="radio" name="desired_time" value="{{i+201}}" checked="checked"> <br> 予約済 </th>
+                                {% endif %}
+                            {% else %}
+                                {% if i < 5 %}
+                                    {% if reservation_purple[i] >= 6 %}
+                                        <th> <input type="radio" name="desired_time" value="{{i+200}}" disabled> </th>
                                     {% else %}
-                                    <th> <input type="radio" name="desired_time" value="{{i+200}}"> </th>
+                                        <th> <input type="radio" name="desired_time" value="{{i+200}}"> </th>
+                                    {% endif %}
+                                {% else %}
+                                    {% if reservation_purple[i] >= 6 %}
+                                        <th> <input type="radio" name="desired_time" value="{{i+201}}" disabled> </th>
+                                    {% else %}
+                                        <th> <input type="radio" name="desired_time" value="{{i+201}}"> </th>
                                     {% endif %}
                                 {% endif %}
                             {% endif %}
