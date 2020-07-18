@@ -106,7 +106,7 @@
                                 {% if bath_type == 2 and bath_time == times[i] %}
                                     <th> <input type="radio" name="desired_time" value="{{i+200}}" checked="checked"> <br> 予約済 </th>
                                 {% else %}
-                                    {% if reservation_purple[i] >= 6 %}
+                                    {% if (reservation_purple[i] or 0) >= 6 %}
                                     <th> <input type="radio" name="desired_time" value="{{i+200}}" disabled> </th>
                                     {% else %}
                                     <th> <input type="radio" name="desired_time" value="{{i+200}}"> </th>
@@ -116,7 +116,7 @@
                                 {% if bath_type == 2 and bath_time == times[i+1] %}
                                     <th> <input type="radio" name="desired_time" value="{{i+201}}" checked="checked"> <br> 予約済 </th>
                                 {% else %}
-                                    {% if reservation_purple[i] >= 6 %}
+                                    {% if (reservation_purple[i] or 0 ) >= 6 %}
                                     <th> <input type="radio" name="desired_time" value="{{i+201}}" disabled> </th>
                                     {% else %}
                                     <th> <input type="radio" name="desired_time" value="{{i+201}}"> </th>
