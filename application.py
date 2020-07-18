@@ -13,7 +13,7 @@ app.secret_key = str(random.randrange(9999999999999999))
 app.jinja_env.add_extension('jinja2.ext.loopcontrols')
 
 # session['*']が外部から操作されないよう対策
-cookie_secure = False
+cookie_secure = True
 app.config.update(
     SESSION_COOKIE_SECURE=cookie_secure,
     SESSION_COOKIE_HTTPONLY=True,
