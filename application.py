@@ -13,7 +13,7 @@ app.secret_key = str(random.randrange(9999999999999999))
 app.jinja_env.add_extension('jinja2.ext.loopcontrols')
 
 # session['*']が外部から操作されないよう対策
-cookie_secure = True
+cookie_secure = False
 app.config.update(
     SESSION_COOKIE_SECURE=cookie_secure,
     SESSION_COOKIE_HTTPONLY=True,
@@ -366,4 +366,4 @@ def logout():
     return responce
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000, threaded=True)
+    app.run(debug=False, host="0.0.0.0", port=5000, threaded=True)
