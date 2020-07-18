@@ -12,8 +12,9 @@ app = Flask(__name__)
 app.secret_key = str(random.randrange(9999999999999999))
 
 # session['*']が外部から操作されないよう対策
+cookie_secure = False
 app.config.update(
-    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_SECURE=cookie_secure,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
 )
@@ -87,7 +88,7 @@ def before_request():
         pass
 
 def after_request(responce):
-    responce.set_cookie("TemplateRootPath",session['TemplateRootPath'],max_age=cookie_maxAge,secure=True,httponly=True)
+    responce.set_cookie("TemplateRootPath",session['TemplateRootPath'],max_age=cookie_maxAge,secure=cookie_secure,httponly=True)
     return responce
     
 
@@ -155,8 +156,8 @@ def login_manager():
             responce = redirect('/reserve') # /reserveページで更新した際に「フォームの内容を再度送信しますか？」と表示されるのを回避
             # 自動ログインの登録
             if autosave:
-                responce.set_cookie("autologin_userid",userid,max_age=cookie_maxAge,secure=True,httponly=True)
-                responce.set_cookie("autologin_userpassword",userpassword,max_age=cookie_maxAge,secure=True,httponly=True)
+                responce.set_cookie("autologin_userid",userid,max_age=cookie_maxAge,secure=cookie_secure,httponly=True)
+                responce.set_cookie("autologin_userpassword",userpassword,max_age=cookie_maxAge,secure=cookie_secure,httponly=True)
             
             return responce
         # --- 失敗 --------------------------------------------------------------
@@ -241,9 +242,10 @@ def reserve_register():
     userid = session['userid']
     desired_time = request.form["desired_time"]
     now = datetime.datetime.now()
-    today = now.strftime("%Y_%m_%d ")
+    # today = now.strftime("%Y_%m_%d ")
     bath_type = int(desired_time)//100
-    desired_time = now.strftime("%Y_%m_%d ") + times[int(desired_time)%100]
+    # desired_time = now.strftime("%Y_%m_%d ") + times[int(desired_time)%100]
+    desired_time = "2020-07-16 " + times[int(desired_time)%100]
     # DB接続
     cnxn = pyodbc.connect('DRIVER='+driver+';SERVER='+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+password)
     cursor = cnxn.cursor()
