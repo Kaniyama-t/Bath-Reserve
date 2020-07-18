@@ -221,35 +221,48 @@
             booked_max_booking = 'A'
         ) %}
     {% if bath_type != '' %}
+    {% if dormitory_type == 0 %}
         {% set l_bathtypes = [1,0] %}
+    {% elif dormitory_type == 1 %}
+        {% set l_bathtypes = [2] %}
+    {% endif %}
+
         {% for l_bathtype in l_bathtypes %}
-        {% if l_bathtype == 0 %}
+            {% if l_bathtype == 0 %}
 
-            {% set l_bathtype_text = '小風呂' %}
-            {% set MaxBooking = 4 %}
-            {% set reservation = reservation_small %}
+                {% set l_bathtype_text = '小風呂' %}
+                {% set MaxBooking = 4 %}
+                {% set reservation = reservation_small %}
 
-        {% else %}
+            {% elif l_bathtype == 1 %}
 
-            {% set l_bathtype_text = '大風呂' %}
-            {% set MaxBooking = 9 %}
-            {% set reservation = reservation_large %}
+                {% set l_bathtype_text = '大風呂' %}
+                {% set MaxBooking = 9 %}
+                {% set reservation = reservation_large %}
+        
+            {% else %}
 
-        {% endif %}
-        {% for i in range(times_len-1) %}
+                {% set l_bathtype_text = '風呂(女子寮)' %}
+                {% set MaxBooking = 6 %}
+                {% set reservation = reservation_purple %}
 
-        <!-- BOOKED -->
-        {% if bath_type == l_bathtype and bath_time == times[i] %}
-            {% set myreservation.booked_card_status = '' %}
-            {% set myreservation.booked_time_from = times[i] %}
-            {% set myreservation.booked_time_to = times[i+1] %}
-            {% set myreservation.booked_bathtype_text = l_bathtype_text %}
-            {% set myreservation.booked_range_cnt = reservation[i] %}
-            {% set myreservation.booked_max_booking = MaxBooking %}
-        {% endif %}
+            {% endif %}
+
+            {% for i in range(times_len-1) %}
+
+                <!-- BOOKED -->
+                {% if bath_type == l_bathtype and bath_time == times[i] %}
+                    {% set myreservation.booked_card_status = '' %}
+                    {% set myreservation.booked_time_from = times[i] %}
+                    {% set myreservation.booked_time_to = times[i+1] %}
+                    {% set myreservation.booked_bathtype_text = l_bathtype_text %}
+                    {% set myreservation.booked_range_cnt = reservation[i] %}
+                    {% set myreservation.booked_max_booking = MaxBooking %}
+                {% endif %}
+            {% endfor %}
         {% endfor %}
-        {% endfor %}
-        {% endif %}
+    {% endif %}
+            
         <button class=" w3-panel offer_card" style="margin: 0px!important;padding:0;width:100%;" {{myreservation.booked_card_status}}>
       
              <!-- inside layout of offer card -->
