@@ -12,68 +12,122 @@
         <h1>浴室予約システム</h1>
         <p>ようこそ，{{userid}}さん．<br>{{today}}の浴室の予約を行います．<br />その他の操作：<a href="./reserve?ui=ver2">スマホ版への切り替え</a>，<a href="./logout">ログアウト</a></p>
         {% if Error == 1 %}
-        <p id="error">ご希望の時間に予約することができませんでした．<br> 他の時間を選択してください．</p>
+            <p id="error">ご希望の時間に予約することができませんでした．<br> 他の時間を選択してください．</p>
         {% endif %}
-        <form action="/reserve_resister" method="POST">
-            <table border="1">
-                <tr>
-                    <th colspan="2">入浴時間</th>
-                    {% for i in range(times_len-1) %}
-                    <th> {{times[i]}} ~ {{times[i+1]}} </th>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <th rowspan="2">予約状況</th>
-                    <th>大風呂</th>
-                    {% for i in range(times_len-1) %}
-                        {% if reservation_large[i] == None %}
-                            <th> 0/9 </th>
-                        {% else %}
-                            <th> {{reservation_large[i]}}/9 </th>
-                        {% endif %}
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <th>小風呂</th>
-                    {% for i in range(times_len-1) %}
-                        {% if reservation_small[i] == None %}
-                            <th> 0/4 </th>
-                        {% else %}
-                            <th> {{reservation_small[i]}}/4 </th>
-                        {% endif %}
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <th rowspan="2">予約</th>
-                    <th>大風呂</th>
-                    {% for i in range(times_len-1) %}
-                        {% if bath_type == 1 and bath_time == times[i] %}
-                            <th> <input type="radio" name="desired_time" value="{{i+100}}" checked="checked"> <br> 予約済 </th>
-                        {% else %}
-                            {% if reservation_large[i] >= 9 %}
-                            <th> <input type="radio" name="desired_time" value="{{i+100}}" disabled> </th>
+        {% if dormitory_type == 0 %}
+            <form action="/reserve_resister" method="POST">
+                <table border="1">
+                    <tr>
+                        <th colspan="2">入浴時間</th>
+                        {% for i in range(times_len-1) %}
+                        <th> {{times[i]}} ~ {{times[i+1]}} </th>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <th rowspan="2">予約状況</th>
+                        <th>大風呂</th>
+                        {% for i in range(times_len-1) %}
+                            {% if reservation_large[i] == None %}
+                                <th> 0/9 </th>
                             {% else %}
-                            <th> <input type="radio" name="desired_time" value="{{i+100}}"> </th>
+                                <th> {{reservation_large[i]}}/9 </th>
                             {% endif %}
-                        {% endif %}
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <th>小風呂</th>
-                    {% for i in range(times_len-1) %}
-                        {% if bath_type == 0 and bath_time == times[i] %}
-                            <th> <input type="radio" name="desired_time" value="{{i}}" checked="checked"> <br> 予約済 </th>
-                        {% else %}
-                            {% if reservation_small[i] >= 4 %}
-                            <th> <input type="radio" name="desired_time" value="{{i}}" disabled> </th>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <th>小風呂</th>
+                        {% for i in range(times_len-1) %}
+                            {% if reservation_small[i] == None %}
+                                <th> 0/4 </th>
                             {% else %}
-                            <th> <input type="radio" name="desired_time" value="{{i}}"> </th>
+                                <th> {{reservation_small[i]}}/4 </th>
                             {% endif %}
-                        {% endif %}
-                    {% endfor %}
-                </tr>
-            </table>
-            <input type="submit" value="予約">
-        </form>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <th rowspan="2">予約</th>
+                        <th>大風呂</th>
+                        {% for i in range(times_len-1) %}
+                            {% if bath_type == 1 and bath_time == times[i] %}
+                                <th> <input type="radio" name="desired_time" value="{{i+100}}" checked="checked"> <br> 予約済 </th>
+                            {% else %}
+                                {% if reservation_large[i] >= 9 %}
+                                <th> <input type="radio" name="desired_time" value="{{i+100}}" disabled> </th>
+                                {% else %}
+                                <th> <input type="radio" name="desired_time" value="{{i+100}}"> </th>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <th>小風呂</th>
+                        {% for i in range(times_len-1) %}
+                            {% if bath_type == 0 and bath_time == times[i] %}
+                                <th> <input type="radio" name="desired_time" value="{{i}}" checked="checked"> <br> 予約済 </th>
+                            {% else %}
+                                {% if reservation_small[i] >= 4 %}
+                                <th> <input type="radio" name="desired_time" value="{{i}}" disabled> </th>
+                                {% else %}
+                                <th> <input type="radio" name="desired_time" value="{{i}}"> </th>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                </table>
+                <input type="submit" value="予約">
+            </form>
+        {% elif dormitory_type == 1 %}
+            <form action="/reserve_resister" method="POST">
+                <table border="1">
+                    <tr>
+                        <th>入浴時間</th>
+                        {% for i in range(times_len-1) %}
+                            {% if i == 5 %}
+                                {% continue %}
+                            {% else %}
+                                <th> {{times[i]}} ~ {{times[i+1]}} </th>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <th>予約状況</th>
+                        {% for i in range(times_len-2) %}
+                            {% if reservation_purple[i] == None %}
+                                <th> 0/6 </th>
+                            {% else %}
+                                <th> {{reservation_purple[i]}}/6 </th>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <th>予約</th>
+                        {% for i in range(times_len-2) %}
+                            {% if i < 5 %}
+                                {% if bath_type == 2 and bath_time == times[i] %}
+                                    <th> <input type="radio" name="desired_time" value="{{i+200}}" checked="checked"> <br> 予約済 </th>
+                                {% else %}
+                                    {% if reservation_purple[i] >= 6 %}
+                                    <th> <input type="radio" name="desired_time" value="{{i+200}}" disabled> </th>
+                                    {% else %}
+                                    <th> <input type="radio" name="desired_time" value="{{i+200}}"> </th>
+                                    {% endif %}
+                                {% endif %}
+                            {% else %}
+                                {% if bath_type == 2 and bath_time == times[i+1] %}
+                                    <th> <input type="radio" name="desired_time" value="{{i+201}}" checked="checked"> <br> 予約済 </th>
+                                {% else %}
+                                    {% if reservation_purple[i] >= 6 %}
+                                    <th> <input type="radio" name="desired_time" value="{{i+201}}" disabled> </th>
+                                    {% else %}
+                                    <th> <input type="radio" name="desired_time" value="{{i+201}}"> </th>
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                </table>
+                <input type="submit" value="予約">
+            </form>
+        {% endif %}
     </body>
 </html>
