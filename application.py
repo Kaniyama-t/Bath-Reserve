@@ -4,7 +4,10 @@ import hashlib
 import pyodbc
 import random
 import json
+import os
+import numpy as np
 from my_server_setting import server, database, username, password, driver 
+
 app = Flask(__name__)
 app.secret_key = str(random.randrange(9999999999999999))
 app.jinja_env.add_extension('jinja2.ext.loopcontrols')
@@ -32,6 +35,11 @@ i=0
 while i < len(times_purple):
     times_purple[i] = times_purple[i].strftime("%H:%M")
     i += 1
+
+# favicon設定
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, "img"), "favicon.ico", mimetype='image/vnd.microsoft.icon')
 
 # ログインページへの遷移
 @app.route("/", methods=["GET", "POST"])
@@ -88,13 +96,9 @@ def login_manager():
         i += 1
         if i == 5:
             i += 1
-    print(sql)
     sql_purple = sql[:-2] +"FROM reserve WHERE bath_type = 2"
     cursor.execute(sql_purple)
     reservation_purple = cursor.fetchone()
-    print(reservation_purple)
-    print(times_purple[5])
-    print(len(times_purple))
     # 既存の自身の予約を確認
     sql = "SELECT bath_type, date FROM reserve WHERE userid=? AND date LIKE ?"
     cursor.execute(sql, userid, today+"%")
@@ -211,4 +215,4 @@ def user_resister():
     return render_template("user_regist_success.html")
 
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=5000, threaded=True)
+    app.run(debug=True, host="0.0.0.0", port=5000, threaded=True)
