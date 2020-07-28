@@ -1,0 +1,5 @@
+server='bath-reserve.database.windows.net'
+database='Bath-Reserve-DB'
+username='e16278'
+password='Tuba0221nexus'
+driver='{ODBC Driver 17 for SQL Server}'
