@@ -14,6 +14,10 @@ app = Flask(__name__)
 app.secret_key = str(random.randrange(9999999999999999))
 app.jinja_env.add_extension("jinja2.ext.loopcontrols")
 
+# 管理者コンソールエイリアス
+from admin.console import adminConsole
+app.register_blueprint(adminConsole.app, url_prefix='/admin_console')
+
 # 入浴時間リスト
 # 七宝寮
 times_cloisonne = gen_timetable("17:00", "22:50", "25")
